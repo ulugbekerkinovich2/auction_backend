@@ -3,6 +3,7 @@ const fileUpload = require("express-fileupload");
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const bidRoutes = require("./routes/bid.route");
 
 const app = express();
 app.use(express.json());
@@ -14,6 +15,7 @@ app.use(express.static("uploads"));
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/bids", bidRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
