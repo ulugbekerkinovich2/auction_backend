@@ -9,7 +9,7 @@ const cors = require("cors");
 const app = express();
 app.use(express.json());
 app.use(fileUpload());
-app.use(cors());
+app.use(cors({ origin: "*" }));
 
 // Serve static files from the "public" directory
 app.use(express.static("uploads"));
