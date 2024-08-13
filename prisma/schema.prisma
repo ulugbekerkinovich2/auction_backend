@@ -8,12 +8,14 @@ datasource db {
 }
 
 model User {
-  id       String    @id @default(uuid())
-  username String    @unique
-  password String
-  role     Role
-  products Product[]
-  bids     Bid[]
+  id            String    @id @default(uuid())
+  username      String    @unique
+  password      String
+  role          Role
+  products      Product[]
+  bids          Bid[]
+  SalesAsSeller Sales[]   @relation("SalesAsSeller")
+  SalesAsBuyer  Sales[]   @relation("SalesAsBuyer")
 }
 
 model Product {
@@ -27,6 +29,9 @@ model Product {
   bids       Bid[]
   categories ProductCategory[]
   createdAt  DateTime          @default(now())
+  isBuyed    Boolean           @default(false)
+  isSelled   Boolean           @default(false)
+  sales      Sales[] // Relation to Sales model
 }
 
 model Category {
@@ -46,17 +51,29 @@ model ProductCategory {
 }
 
 model Bid {
-  id        String   @id @default(uuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  bidAmount Int
-  createdAt DateTime @default(now())
+  id               String   @id @default(uuid())
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  bidAmount        Int
+  createdAt        DateTime @default(now())
+  amIboughtProduct Boolean  @default(false)
 }
 
 enum Role {
   ADMIN
   USER
   MODERATOR
+}
+
+model Sales {
+  id             String   @id @default(uuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id])
+  selledUserId   String
+  selledUser     User     @relation("SalesAsSeller", fields: [selledUserId], references: [id])
+  boughtedUserId String
+  boughtedUser   User     @relation("SalesAsBuyer", fields: [boughtedUserId], references: [id])
+  createdAt      DateTime @default(now())
 }

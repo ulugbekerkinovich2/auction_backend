@@ -8,6 +8,11 @@ router.post("/", isAuth, bidController.createBid);
 // Get all bids
 router.get("/", isAuth, bidController.getAllBids);
 router.get("/user", isAuth, bidController.getUserAllBids);
+router.get(
+  "/user/sales:userId",
+  isAuth,
+  bidController.getUserBidsOnOwnProducts
+);
 
 // Get a bid by ID
 router.get("/:bidId", bidController.getBidById);

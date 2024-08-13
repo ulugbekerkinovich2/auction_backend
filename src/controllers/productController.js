@@ -120,19 +120,15 @@ exports.getAllProducts = async (req, res) => {
     //   res.status(200).send(products);
     // }
 
-    const products = await prisma.product
-      .findMany({
-        include: {
-          categories: {
-            select: {
-              category: true, // Include category information
-            },
+    const products = await prisma.product.findMany({
+      include: {
+        categories: {
+          select: {
+            category: true, // Include category information
           },
         },
-      })
-      .orderBy({
-        id: "desc",
-      });
+      },
+    });
     res.status(200).send(products);
   } catch (error) {
     res.status(500).send({
@@ -243,6 +239,8 @@ exports.updateProduct = async (req, res) => {
     name: Joi.string().optional(),
     cost: Joi.number().integer().min(0).optional(),
     categoryId: Joi.string().optional(), // Allow category update
+    isBuyed: Joi.boolean().optional(),
+    isSelled: Joi.boolean().optional(),
   });
 
   // Validate the request body
@@ -292,6 +290,8 @@ exports.updateProduct = async (req, res) => {
       name: value.name || existingProduct.name,
       cost: value.cost || existingProduct.cost,
       image: photoName,
+      isBuyed: value.isBuyed || existingProduct.isBuyed,
+      isSelled: value.isSelled || existingProduct.isSelled,
     };
 
     if (value.categoryId) {

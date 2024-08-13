@@ -231,3 +231,40 @@ exports.deleteBid = async (req, res) => {
     });
   }
 };
+
+exports.getUserBidsOnOwnProducts = async (req, res) => {
+  try {
+    // Fetch bids on the logged-in user's products by other users
+    console.log(req.user);
+    console.log("keldi");
+
+    const userBids = await prisma.bid.findMany({
+      where: {
+        product: {
+          userId: req.user.id, // Ensure the product belongs to the logged-in user
+        },
+        userId: {
+          not: req.user.id, // Ensure the bid was made by other users
+        },
+      },
+      include: {
+        product: true, // Include product details
+        user: true, // Include the bidding user details
+      },
+    });
+    console.log(userBids);
+
+    // If no bids found
+    if (userBids.length === 0) {
+      return res.status(404).json({
+        message: "No bids found on your products from other users.",
+      });
+    }
+
+    res.status(200).json(userBids);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Failed to fetch user bids", error: err.message });
+  }
+};
