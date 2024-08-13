@@ -1,20 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const bidController = require("../controllers/bidController");
-
+const isAuth = require("../middleware/is-auth.middleware");
 // Create a new bid
-router.post("/", bidController.createBid);
+router.post("/", isAuth, bidController.createBid);
 
 // Get all bids
-router.get("/", bidController.getAllBids);
+router.get("/", isAuth, bidController.getAllBids);
+router.get("/user", isAuth, bidController.getUserAllBids);
 
 // Get a bid by ID
 router.get("/:bidId", bidController.getBidById);
+router.get("/user/:bidId", isAuth, bidController.getUserBidById);
 
 // Update a bid by ID
-router.put("/:bidId", bidController.updateBid);
+router.put("/:bidId", isAuth, bidController.updateBid);
 
 // Delete a bid by ID
-router.delete("/:bidId", bidController.deleteBid);
+router.delete("/:bidId", isAuth, bidController.deleteBid);
 
 module.exports = router;

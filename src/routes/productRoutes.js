@@ -10,10 +10,11 @@ router.post("/", isAuth, productController.createProduct);
 router.get("/", productController.getAllProducts);
 
 // Get a single product by ID
+router.get("/user/:productId", isAuth, productController.getUserOneProduct);
 router.get("/:productId", productController.getOneProduct);
 
 // Update a product by ID (Requires authentication)
-router.put("/:productId", isAuth, productController.updateProduct);
+router.put("/user/:productId", isAuth, productController.updateProduct);
 
 // Delete a product by ID (Requires authentication)
 router.delete("/:productId", isAuth, productController.deleteProduct);

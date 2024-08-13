@@ -26,11 +26,13 @@ model Product {
   image      String
   bids       Bid[]
   categories ProductCategory[]
+  createdAt  DateTime          @default(now())
 }
 
 model Category {
   id       String            @id @default(uuid())
   name     String
+  image    String
   products ProductCategory[]
 }
 
@@ -44,12 +46,13 @@ model ProductCategory {
 }
 
 model Bid {
-  id        String  @id @default(uuid())
+  id        String   @id @default(uuid())
   productId String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
   userId    String
-  user      User    @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   bidAmount Int
+  createdAt DateTime @default(now())
 }
 
 enum Role {

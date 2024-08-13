@@ -5,8 +5,12 @@ const Joi = require("joi");
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
+    const { role } = req.user;
+    if (role !== "ADMIN") {
+      return res.status(403).json({ message: "Permission denied" });
+    }
     const users = await prisma.user.findMany();
-    res.status(200).json(users);
+    res.status(200).json({ data: users, count: users.length });
   } catch (error) {
     res
       .status(500)
@@ -19,6 +23,10 @@ exports.getOneUser = async (req, res) => {
   const { userId } = req.params;
 
   try {
+    const { role } = req.user;
+    if (role !== "ADMIN") {
+      return res.status(403).json({ message: "Permission denied" });
+    }
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -37,6 +45,10 @@ exports.getOneUser = async (req, res) => {
 
 // Update user by ID
 exports.updateUser = async (req, res) => {
+  const { role } = req.user;
+  if (role !== "ADMIN") {
+    return res.status(403).json({ message: "Permission denied" });
+  }
   const { userId } = req.params;
   const schema = Joi.object({
     username: Joi.string().alphanum().min(3).max(30).optional(),
@@ -80,6 +92,11 @@ exports.updateUser = async (req, res) => {
 // Delete user by ID
 exports.deleteUser = async (req, res) => {
   const { userId } = req.params;
+
+  const { role } = req.user;
+  if (role !== "ADMIN") {
+    return res.status(403).json({ message: "Permission denied" });
+  }
 
   try {
     const user = await prisma.user.findUnique({

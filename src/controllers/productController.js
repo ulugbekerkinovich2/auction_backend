@@ -20,9 +20,15 @@ exports.createProduct = async (req, res) => {
   if (!image) return res.status(400).send("Image file is required.");
 
   const user = req.user;
-  if (!user) return res.status(403).send("User authentication failed.");
+  console.log(user);
+
+  if (!user) return res.status(403).send("User authentication failed.1");
 
   try {
+    const { role } = user;
+    if (role !== "ADMIN" && role !== "USER") {
+      return res.status(403).send("User authentication failed.2");
+    }
     // Check if the user exists
     const userExists = await prisma.user.findUnique({
       where: { id: user.id },
@@ -78,16 +84,98 @@ exports.createProduct = async (req, res) => {
 // Get All Products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await prisma.product.findMany({
-      include: {
-        categories: {
-          select: {
-            category: true, // Include category information
+    // const user = req.user;
+    // console.log(user);
+
+    // const { role, id } = user;
+
+    // if (role !== "ADMIN" && role !== "USER") {
+    //   return res.status(403).send("User authentication failed.1");
+    // }
+
+    // if (role == "USER") {
+    //   const products = await prisma.product.findMany({
+    //     where: { userId: id },
+    //     include: {
+    //       categories: {
+    //         select: {
+    //           category: true, // Include category information
+    //         },
+    //       },
+    //     },
+    //   });
+    //   res.status(200).send(products);
+    // }
+
+    // if (role == "ADMIN") {
+    //   const products = await prisma.product.findMany({
+    //     include: {
+    //       categories: {
+    //         select: {
+    //           category: true, // Include category information
+    //         },
+    //       },
+    //     },
+    //   });
+    //   res.status(200).send(products);
+    // }
+
+    const products = await prisma.product
+      .findMany({
+        include: {
+          categories: {
+            select: {
+              category: true, // Include category information
+            },
           },
         },
-      },
-    });
+      })
+      .orderBy({
+        id: "desc",
+      });
     res.status(200).send(products);
+  } catch (error) {
+    res.status(500).send({
+      message: "Failed to fetch products",
+      error: error.message,
+    });
+  }
+};
+
+exports.getUserAllProducts = async (req, res) => {
+  try {
+    const { id, role } = req.user;
+    console.log(11, id, role);
+
+    if (role !== "USER" && role !== "ADMIN") {
+      return res.status(403).send("User authentication failed.1");
+    }
+
+    if (role == "USER") {
+      const products = await prisma.product.findMany({
+        where: { userId: id },
+        include: {
+          categories: {
+            select: {
+              category: true, // Include category information
+            },
+          },
+        },
+      });
+      res.status(200).send(products);
+    }
+    if (role == "ADMIN") {
+      const products = await prisma.product.findMany({
+        include: {
+          categories: {
+            select: {
+              category: true, // Include category information
+            },
+          },
+        },
+      });
+      res.status(200).send(products);
+    }
   } catch (error) {
     res.status(500).send({
       message: "Failed to fetch products",
@@ -121,19 +209,47 @@ exports.getOneProduct = async (req, res) => {
     });
   }
 };
-
+exports.getUserOneProduct = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        categories: {
+          select: {
+            category: true, // Include category information
+          },
+        },
+      },
+    });
+    if (!product) {
+      return res.status(404).send("Product not found.");
+    }
+    res.status(200).send(product);
+  } catch (error) {
+    res.status(500).send({
+      message: "Failed to fetch the product",
+      error: error.message,
+    });
+  }
+};
 // Update Product by ID
+
 exports.updateProduct = async (req, res) => {
   const { productId } = req.params;
+
+  // Validation schema
   const schema = Joi.object({
     name: Joi.string().optional(),
     cost: Joi.number().integer().min(0).optional(),
     categoryId: Joi.string().optional(), // Allow category update
   });
 
+  // Validate the request body
   const { error, value } = schema.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
+  // Find the existing product
   const existingProduct = await prisma.product.findUnique({
     where: { id: productId },
   });
@@ -141,6 +257,14 @@ exports.updateProduct = async (req, res) => {
     return res.status(404).send("Product not found.");
   }
 
+  // Get user information and role
+  const userData = req.user;
+  const role = userData.role;
+  if (role !== "ADMIN" && role !== "USER") {
+    return res.status(403).send("User authentication failed.");
+  }
+
+  // Handle image upload if provided
   const image = req.files?.image;
   let photoName = existingProduct.image;
 
@@ -163,6 +287,7 @@ exports.updateProduct = async (req, res) => {
   }
 
   try {
+    // Prepare the updated product data
     const updatedProductData = {
       name: value.name || existingProduct.name,
       cost: value.cost || existingProduct.cost,
@@ -185,19 +310,28 @@ exports.updateProduct = async (req, res) => {
       };
     }
 
+    // Update the product
     const updatedProduct = await prisma.product.update({
       where: { id: productId },
       data: updatedProductData,
       include: {
         categories: {
           select: {
-            category: true, // Include category information
+            category: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            }, // Include category information
           },
         },
       },
     });
+
     res.status(200).send(updatedProduct);
   } catch (err) {
+    console.error(err);
     res.status(500).send({
       message: "Failed to update product",
       error: err.message,
@@ -210,7 +344,12 @@ exports.deleteProduct = async (req, res) => {
   const { productId } = req.params;
 
   try {
-    const product = await prisma.product.findUnique({
+    const userData = req.user;
+    const { role } = userData.role;
+    if (role !== "ADMIN" || role !== "USER") {
+      return res.status(403).send("User authentication failed.");
+    }
+    const product = await prisma.product.findFirst({
       where: { id: productId },
     });
     if (!product) {

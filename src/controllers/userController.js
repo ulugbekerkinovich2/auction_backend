@@ -63,7 +63,7 @@ exports.login = async (req, res) => {
     }
 
     // Generate JWT token using your jwt.js module
-    const token = generateToken({ id: user.id, username: user.username });
+    const token = generateToken({ id: user.id, role: user.role });
 
     res.json({ message: "Logged in successfully", token });
   } catch (err) {
