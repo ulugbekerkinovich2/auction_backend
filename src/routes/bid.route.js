@@ -9,7 +9,7 @@ router.post("/", isAuth, bidController.createBid);
 router.get("/", isAuth, bidController.getAllBids);
 router.get("/user", isAuth, bidController.getUserAllBids);
 router.get(
-  "/user/sales:userId",
+  "/user/sales",
   isAuth,
   bidController.getUserBidsOnOwnProducts
 );

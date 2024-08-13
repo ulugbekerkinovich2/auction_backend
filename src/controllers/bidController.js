@@ -235,8 +235,8 @@ exports.deleteBid = async (req, res) => {
 exports.getUserBidsOnOwnProducts = async (req, res) => {
   try {
     // Fetch bids on the logged-in user's products by other users
-    console.log(req.user);
-    console.log("keldi");
+    // console.log(req.user);
+    // console.log("keldi");
 
     const userBids = await prisma.bid.findMany({
       where: {

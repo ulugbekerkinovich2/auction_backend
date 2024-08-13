@@ -97,7 +97,15 @@ exports.createSale = async (req, res) => {
         },
       },
     });
-
+    await prisma.bid.updateMany({
+      where: {
+        productId,
+        userId: boughtedUserId,
+      },
+      data: {
+        amIboughtProduct: true,
+      },
+    });
     res.status(201).json(sale);
   } catch (err) {
     res
