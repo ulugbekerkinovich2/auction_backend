@@ -58,14 +58,25 @@ exports.createCategory = async (req, res) => {
 
 // Get all categories
 exports.getAllCategories = async (req, res) => {
+  const { name } = req.query; // Get the category name from the query parameters
+
   try {
     const categories = await prisma.category.findMany({
+      where: name
+        ? {
+            name: {
+              contains: name, // Filter by category name using the 'contains' operator
+              mode: "insensitive", // Case-insensitive search
+            },
+          }
+        : {}, // If no name is provided, return all categories
       select: {
         id: true,
         name: true,
         image: true,
       },
     });
+
     res.status(200).json(categories);
   } catch (err) {
     res.status(500).send({

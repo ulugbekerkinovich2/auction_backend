@@ -83,8 +83,18 @@ exports.createProduct = async (req, res) => {
 
 // Get All Products
 exports.getAllProducts = async (req, res) => {
+  const { name } = req.query; // Get the product name from the query parameters
+
   try {
     const products = await prisma.product.findMany({
+      where: name
+        ? {
+            name: {
+              contains: name, // Filter by product name using the 'contains' operator
+              mode: "insensitive", // Case-insensitive search
+            },
+          }
+        : {}, // If no name is provided, return all products
       include: {
         categories: {
           select: {
@@ -99,6 +109,7 @@ exports.getAllProducts = async (req, res) => {
         },
       },
     });
+
     res.status(200).send(products);
   } catch (error) {
     res.status(500).send({
