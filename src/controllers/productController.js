@@ -84,47 +84,17 @@ exports.createProduct = async (req, res) => {
 // Get All Products
 exports.getAllProducts = async (req, res) => {
   try {
-    // const user = req.user;
-    // console.log(user);
-
-    // const { role, id } = user;
-
-    // if (role !== "ADMIN" && role !== "USER") {
-    //   return res.status(403).send("User authentication failed.1");
-    // }
-
-    // if (role == "USER") {
-    //   const products = await prisma.product.findMany({
-    //     where: { userId: id },
-    //     include: {
-    //       categories: {
-    //         select: {
-    //           category: true, // Include category information
-    //         },
-    //       },
-    //     },
-    //   });
-    //   res.status(200).send(products);
-    // }
-
-    // if (role == "ADMIN") {
-    //   const products = await prisma.product.findMany({
-    //     include: {
-    //       categories: {
-    //         select: {
-    //           category: true, // Include category information
-    //         },
-    //       },
-    //     },
-    //   });
-    //   res.status(200).send(products);
-    // }
-
     const products = await prisma.product.findMany({
       include: {
         categories: {
           select: {
-            category: true, // Include category information
+            category: {
+              select: {
+                name: true,
+                id: true,
+                image: true,
+              },
+            },
           },
         },
       },
@@ -133,6 +103,53 @@ exports.getAllProducts = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       message: "Failed to fetch products",
+      error: error.message,
+    });
+  }
+};
+
+// Get Products by Category ID
+exports.getProductsByCategory = async (req, res) => {
+  const { categoryId } = req.params;
+
+  try {
+    // Check if the category exists
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      return res.status(404).send("Category not found.");
+    }
+
+    // Fetch products that belong to the specified category
+    const products = await prisma.product.findMany({
+      where: {
+        categories: {
+          some: {
+            categoryId: categoryId,
+          },
+        },
+      },
+      include: {
+        categories: {
+          select: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).send(products);
+  } catch (error) {
+    res.status(500).send({
+      message: "Failed to fetch products by category",
       error: error.message,
     });
   }

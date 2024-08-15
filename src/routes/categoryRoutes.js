@@ -6,7 +6,7 @@ const isAuth = require("../middleware/is-auth.middleware");
 router.post("/", isAuth, categoryController.createCategory);
 
 // Route to get all categories
-router.get("/", isAuth, categoryController.getAllCategories);
+router.get("/", categoryController.getAllCategories);
 
 // Route to get a category by ID
 router.get("/:categoryId", categoryController.getCategoryById);
