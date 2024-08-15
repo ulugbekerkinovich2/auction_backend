@@ -100,8 +100,8 @@ exports.getAllProducts = async (req, res) => {
           select: {
             category: {
               select: {
-                name: true,
                 id: true,
+                name: true,
                 image: true,
               },
             },
@@ -110,10 +110,10 @@ exports.getAllProducts = async (req, res) => {
       },
     });
 
-    // Transform the categories array to remove the nesting
+    // Transform the categories array to a single object
     const transformedProducts = products.map((product) => ({
       ...product,
-      categories: product.categories.map((c) => c.category), // Flattening the category structure
+      categories: product.categories[0]?.category || {}, // Flatten to a single object
     }));
 
     res.status(200).send(transformedProducts);
@@ -163,7 +163,13 @@ exports.getProductsByCategory = async (req, res) => {
       },
     });
 
-    res.status(200).send(products);
+    // Transform the categories array to a single object
+    const transformedProducts = products.map((product) => ({
+      ...product,
+      categories: product.categories[0]?.category || {}, // Flatten to a single object
+    }));
+
+    res.status(200).send(transformedProducts);
   } catch (error) {
     res.status(500).send({
       message: "Failed to fetch products by category",
