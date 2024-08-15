@@ -110,7 +110,13 @@ exports.getAllProducts = async (req, res) => {
       },
     });
 
-    res.status(200).send(products);
+    // Transform the categories array to remove the nesting
+    const transformedProducts = products.map((product) => ({
+      ...product,
+      categories: product.categories.map((c) => c.category), // Flattening the category structure
+    }));
+
+    res.status(200).send(transformedProducts);
   } catch (error) {
     res.status(500).send({
       message: "Failed to fetch products",
