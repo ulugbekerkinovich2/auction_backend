@@ -16,6 +16,7 @@ model User {
   bids          Bid[]
   SalesAsSeller Sales[]   @relation("SalesAsSeller")
   SalesAsBuyer  Sales[]   @relation("SalesAsBuyer")
+  createdAt     DateTime  @default(now())
 }
 
 model Product {
@@ -35,10 +36,11 @@ model Product {
 }
 
 model Category {
-  id       String            @id @default(uuid())
-  name     String
-  image    String
-  products ProductCategory[]
+  id        String            @id @default(uuid())
+  name      String
+  image     String
+  products  ProductCategory[]
+  createdAt DateTime          @default(now())
 }
 
 model ProductCategory {
@@ -46,6 +48,7 @@ model ProductCategory {
   categoryId String
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 
   @@id([productId, categoryId])
 }

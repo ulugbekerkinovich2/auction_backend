@@ -8,6 +8,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const bidRoutes = require("./routes/bid.route");
 const usersRoutes = require("./routes/usersRoute");
 const saleRoutes = require("./routes/saleRoutes");
+const userStatisticsRouter = require("./routes/statisticsRoute");
 
 const app = express();
 app.use(express.json());
@@ -27,6 +28,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/bids", bidRoutes);
 app.use("/api/all-users", usersRoutes);
 app.use("/api/sale", saleRoutes);
+app.use("/api/user-statistics", userStatisticsRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

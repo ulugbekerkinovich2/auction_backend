@@ -310,6 +310,7 @@ exports.updateProduct = async (req, res) => {
   const schema = Joi.object({
     name: Joi.string().optional(),
     cost: Joi.number().integer().min(0).optional(),
+    desc: Joi.string().optional(),
     categoryId: Joi.string().optional(), // Allow category update
     isBuyed: Joi.boolean().optional(),
     isSelled: Joi.boolean().optional(),
@@ -361,7 +362,8 @@ exports.updateProduct = async (req, res) => {
     const updatedProductData = {
       name: value.name || existingProduct.name,
       cost: value.cost || existingProduct.cost,
-      image: photoName,
+      image: photoName || existingProduct.image,
+      desc: value.desc || existingProduct.desc,
       isBuyed: value.isBuyed || existingProduct.isBuyed,
       isSelled: value.isSelled || existingProduct.isSelled,
     };
