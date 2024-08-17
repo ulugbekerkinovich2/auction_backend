@@ -83,7 +83,10 @@ exports.createProduct = async (req, res) => {
 
 // Get All Products
 exports.getAllProducts = async (req, res) => {
-  const { name } = req.query; // Get the product name from the query parameters
+  const { name, page = 1, limit = 10 } = req.query; // Get the product name, page, and limit from the query parameters
+
+  const pageNumber = parseInt(page);
+  const limitNumber = parseInt(limit);
 
   try {
     const products = await prisma.product.findMany({
@@ -96,6 +99,11 @@ exports.getAllProducts = async (req, res) => {
           }
         : {}, // If no name is provided, return all products
       include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
         categories: {
           select: {
             category: {
@@ -108,6 +116,8 @@ exports.getAllProducts = async (req, res) => {
           },
         },
       },
+      skip: (pageNumber - 1) * limitNumber, // Skip the appropriate number of results
+      take: limitNumber, // Limit the number of results returned
     });
 
     // Transform the categories array to a single object
@@ -116,7 +126,29 @@ exports.getAllProducts = async (req, res) => {
       categories: product.categories[0]?.category || {}, // Flatten to a single object
     }));
 
-    res.status(200).send(transformedProducts);
+    // Get the total count of products for pagination metadata
+    const totalProducts = await prisma.product.count({
+      where: name
+        ? {
+            name: {
+              contains: name,
+              mode: "insensitive",
+            },
+          }
+        : {},
+    });
+
+    const totalPages = Math.ceil(totalProducts / limitNumber);
+
+    res.status(200).send({
+      products: transformedProducts,
+      pagination: {
+        totalProducts,
+        totalPages,
+        currentPage: pageNumber,
+        pageSize: limitNumber,
+      },
+    });
   } catch (error) {
     res.status(500).send({
       message: "Failed to fetch products",
@@ -380,25 +412,25 @@ exports.updateProduct = async (req, res) => {
 };
 
 // Delete Product by ID
+// Delete Product by ID
+// Delete Product by ID
 exports.deleteProduct = async (req, res) => {
   const { productId } = req.params;
 
   try {
-    const userData = req.user;
-    const { role } = userData.role;
-    if (role !== "ADMIN" || role !== "USER") {
-      return res.status(403).send("User authentication failed.");
-    }
-    const product = await prisma.product.findFirst({
+    const product = await prisma.product.findUnique({
       where: { id: productId },
     });
+
     if (!product) {
       return res.status(404).send("Product not found.");
     }
 
+    // Delete the product (cascading deletes will handle related records)
     await prisma.product.delete({
       where: { id: productId },
     });
+
     res.status(204).send(); // No content to return upon successful deletion
   } catch (err) {
     res.status(500).send({

@@ -62,8 +62,7 @@ exports.login = async (req, res) => {
       return res.status(401).send("Invalid credentials");
     }
 
-    // Generate JWT token using your jwt.js module
-    const token = generateToken({ id: user.id, role: user.role });
+    const token = generateToken({ id: user.id, role: user.role, username: user.username });
 
     res.json({ message: "Logged in successfully", token });
   } catch (err) {

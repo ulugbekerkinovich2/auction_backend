@@ -17,7 +17,7 @@ router.get("/:productId", productController.getOneProduct);
 router.put("/user/:productId", isAuth, productController.updateProduct);
 
 // Delete a product by ID (Requires authentication)
-router.delete("/:productId", isAuth, productController.deleteProduct);
+router.delete("/:productId", productController.deleteProduct);
 router.get("/byCat/:categoryId", productController.getProductsByCategory);
 
 module.exports = router;

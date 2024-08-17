@@ -21,9 +21,9 @@ model User {
 model Product {
   id         String            @id @default(uuid())
   userId     String
-  user       User              @relation(fields: [userId], references: [id])
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   name       String
-  desc       String // Description of the product
+  desc       String
   cost       Int
   image      String
   bids       Bid[]
@@ -31,7 +31,7 @@ model Product {
   createdAt  DateTime          @default(now())
   isBuyed    Boolean           @default(false)
   isSelled   Boolean           @default(false)
-  sales      Sales[] // Relation to Sales model
+  sales      Sales[]
 }
 
 model Category {
@@ -44,8 +44,8 @@ model Category {
 model ProductCategory {
   productId  String
   categoryId String
-  product    Product  @relation(fields: [productId], references: [id])
-  category   Category @relation(fields: [categoryId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([productId, categoryId])
 }
@@ -53,9 +53,9 @@ model ProductCategory {
 model Bid {
   id               String   @id @default(uuid())
   productId        String
-  product          Product  @relation(fields: [productId], references: [id])
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId           String
-  user             User     @relation(fields: [userId], references: [id])
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   bidAmount        Int
   createdAt        DateTime @default(now())
   amIboughtProduct Boolean  @default(false)
@@ -70,10 +70,10 @@ enum Role {
 model Sales {
   id             String   @id @default(uuid())
   productId      String
-  product        Product  @relation(fields: [productId], references: [id])
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   selledUserId   String
-  selledUser     User     @relation("SalesAsSeller", fields: [selledUserId], references: [id])
+  selledUser     User     @relation("SalesAsSeller", fields: [selledUserId], references: [id], onDelete: Cascade)
   boughtedUserId String
-  boughtedUser   User     @relation("SalesAsBuyer", fields: [boughtedUserId], references: [id])
+  boughtedUser   User     @relation("SalesAsBuyer", fields: [boughtedUserId], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())
 }
