@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const { PrismaClient } = require("@prisma/client");
+const { tr } = require("@faker-js/faker");
 const prisma = new PrismaClient();
 
 // Validation Schema
@@ -155,14 +156,32 @@ exports.getAllSales = async (req, res) => {
 
 exports.getSaleById = async (req, res) => {
   const { id } = req.params;
-
+  const userId = req.user.id;
   try {
     const sale = await prisma.sales.findUnique({
-      where: { id },
+      // where: { id: id, user: userId },
+      where: {
+        id: id,
+        AND: {
+          selledUserId: userId,
+        },
+      },
       include: {
         product: true,
-        selledUser: true,
-        boughtedUser: true,
+        selledUser: {
+          select: {
+            id: true,
+            username: true,
+            createdAt: true,
+          },
+        },
+        boughtedUser: {
+          select: {
+            id: true,
+            username: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
