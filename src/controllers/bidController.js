@@ -70,7 +70,11 @@ exports.createBid = async (req, res) => {
 // Get all bids
 exports.getAllBids = async (req, res) => {
   try {
+    const userID = req.user.id;
+    console.log(userID);
+
     const bids = await prisma.bid.findMany({
+      where: { userId: userID }, // Corrected to use userId
       include: {
         product: true,
         user: {
@@ -216,7 +220,7 @@ exports.deleteBid = async (req, res) => {
       where: { id: bidId },
     });
     if (!bid) {
-      return res.status(404).send("Bid not found.");
+      return res.status(404).send("Order not found.");
     }
 
     await prisma.bid.delete({
@@ -226,7 +230,7 @@ exports.deleteBid = async (req, res) => {
     res.status(204).send(); // No content to return upon successful deletion
   } catch (err) {
     res.status(500).send({
-      message: "Failed to delete bid",
+      message: "Failed to delete Order",
       error: err.message,
     });
   }

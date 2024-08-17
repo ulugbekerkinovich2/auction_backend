@@ -118,8 +118,9 @@ exports.createSale = async (req, res) => {
 exports.getAllSales = async (req, res) => {
   try {
     console.log("getAllSales");
-
+    const userId = req.user.id;
     const allSales = await prisma.sales.findMany({
+      where: { selledUserId: userId },
       include: {
         product: true,
         selledUser: true,
