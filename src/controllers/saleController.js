@@ -124,8 +124,20 @@ exports.getAllSales = async (req, res) => {
       where: { selledUserId: userId },
       include: {
         product: true,
-        selledUser: true,
-        boughtedUser: true,
+        selledUser: {
+          select: {
+            id: true,
+            username: true,
+            createdAt: true,
+          },
+        },
+        boughtedUser: {
+          select: {
+            id: true,
+            username: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
@@ -200,10 +212,15 @@ exports.getSaleById = async (req, res) => {
 exports.updateSale = async (req, res) => {
   const { id } = req.params;
   const { productId, selledUserId, boughtedUserId } = req.body;
-
+  const userId = req.user.id;
   try {
     const updatedSale = await prisma.sales.update({
-      where: { id },
+      where: {
+        id: id,
+        AND: {
+          selledUserId: userId,
+        },
+      },
       data: {
         productId,
         selledUserId,
@@ -226,12 +243,28 @@ exports.updateSale = async (req, res) => {
 
 exports.deleteSale = async (req, res) => {
   const { id } = req.params;
-
+  const userId = req.user.id;
+  const findSale = await prisma.sales.findUnique({
+    where: {
+      id: id,
+      AND: {
+        selledUserId: userId,
+      },
+    },
+  });
+  if (!findSale) {
+    return res.status(404).json({ message: "Lot not found." });
+  }
   try {
     await prisma.sales.delete({
-      where: { id },
+      where: {
+        id: id,
+        AND: {
+          selledUserId: userId,
+        },
+      },
     });
-    res.status(204).json({ message: "Sale deleted successfully." });
+    return res.status(204).json({ message: "Sale deleted successfully." });
   } catch (err) {
     res
       .status(500)
