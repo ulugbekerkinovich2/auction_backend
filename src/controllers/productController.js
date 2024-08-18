@@ -160,6 +160,10 @@ exports.getAllProducts = async (req, res) => {
 // Get Products by Category ID
 exports.getProductsByCategory = async (req, res) => {
   const { categoryId } = req.params;
+  const { page = 1, limit = 10 } = req.query; // Get the page and limit from the query parameters
+
+  const pageNumber = parseInt(page);
+  const limitNumber = parseInt(limit);
 
   try {
     // Check if the category exists
@@ -171,7 +175,7 @@ exports.getProductsByCategory = async (req, res) => {
       return res.status(404).send("Category not found.");
     }
 
-    // Fetch products that belong to the specified category
+    // Fetch products that belong to the specified category with pagination
     const products = await prisma.product.findMany({
       where: {
         categories: {
@@ -193,6 +197,8 @@ exports.getProductsByCategory = async (req, res) => {
           },
         },
       },
+      skip: (pageNumber - 1) * limitNumber, // Skip the appropriate number of results
+      take: limitNumber, // Limit the number of results returned
     });
 
     // Transform the categories array to a single object
@@ -201,7 +207,28 @@ exports.getProductsByCategory = async (req, res) => {
       categories: product.categories[0]?.category || {}, // Flatten to a single object
     }));
 
-    res.status(200).send(transformedProducts);
+    // Get the total count of products for pagination metadata
+    const totalProducts = await prisma.product.count({
+      where: {
+        categories: {
+          some: {
+            categoryId: categoryId,
+          },
+        },
+      },
+    });
+
+    const totalPages = Math.ceil(totalProducts / limitNumber);
+
+    res.status(200).send({
+      products: transformedProducts,
+      pagination: {
+        totalProducts,
+        totalPages,
+        currentPage: pageNumber,
+        pageSize: limitNumber,
+      },
+    });
   } catch (error) {
     res.status(500).send({
       message: "Failed to fetch products by category",

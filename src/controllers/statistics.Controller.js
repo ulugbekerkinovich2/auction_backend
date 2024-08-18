@@ -5,6 +5,10 @@ const prisma = new PrismaClient();
 const { startOfDay, endOfDay } = require("date-fns");
 
 const getUserRegistrationStatistics = async (req, res) => {
+  const isAdmin = req.user.role;
+  if (!isAdmin == "ADMIN") {
+    return res.status(403).json({ message: "Permission denied" });
+  }
   try {
     const { startDate, endDate } = req.query;
 
