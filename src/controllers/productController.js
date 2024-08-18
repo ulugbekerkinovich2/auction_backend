@@ -83,21 +83,28 @@ exports.createProduct = async (req, res) => {
 
 // Get All Products
 exports.getAllProducts = async (req, res) => {
-  const { name, page = 1, limit = 10 } = req.query; // Get the product name, page, and limit from the query parameters
+  const { name, categoryId, page = 1, limit = 10 } = req.query; // Get the product name, categoryId, page, and limit from the query parameters
 
   const pageNumber = parseInt(page);
   const limitNumber = parseInt(limit);
 
   try {
     const products = await prisma.product.findMany({
-      where: name
-        ? {
-            name: {
-              contains: name, // Filter by product name using the 'contains' operator
-              mode: "insensitive", // Case-insensitive search
+      where: {
+        ...(name && {
+          name: {
+            contains: name, // Filter by product name using the 'contains' operator
+            mode: "insensitive", // Case-insensitive search
+          },
+        }),
+        ...(categoryId && {
+          categories: {
+            some: {
+              categoryId: categoryId, // Filter by categoryId
             },
-          }
-        : {}, // If no name is provided, return all products
+          },
+        }),
+      },
       include: {
         user: {
           select: {
@@ -128,14 +135,21 @@ exports.getAllProducts = async (req, res) => {
 
     // Get the total count of products for pagination metadata
     const totalProducts = await prisma.product.count({
-      where: name
-        ? {
-            name: {
-              contains: name,
-              mode: "insensitive",
+      where: {
+        ...(name && {
+          name: {
+            contains: name,
+            mode: "insensitive",
+          },
+        }),
+        ...(categoryId && {
+          categories: {
+            some: {
+              categoryId: categoryId, // Count products matching the categoryId filter
             },
-          }
-        : {},
+          },
+        }),
+      },
     });
 
     const totalPages = Math.ceil(totalProducts / limitNumber);
