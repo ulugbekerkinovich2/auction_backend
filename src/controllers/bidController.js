@@ -256,7 +256,7 @@ exports.getUserBidsOnOwnProducts = async (req, res) => {
         user: true, // Include the bidding user details
       },
     });
-    console.log(userBids);
+    // console.log(userBids);
 
     // If no bids found
     if (userBids.length === 0) {
