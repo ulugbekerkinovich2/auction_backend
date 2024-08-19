@@ -310,6 +310,8 @@ exports.getUserBidsOnOwnProducts = async (req, res) => {
     // Format the response
     const response = userProducts.map((product) => ({
       productId: product.id,
+      product_name: product.name, // Include product name
+      product_image: product.image, // Include product image
       selledUserId: product.sales[0]?.selledUserId,
       boughtedUserId: product.sales[0]?.boughtedUserId,
       selledCost: product.cost,
@@ -330,3 +332,4 @@ exports.getUserBidsOnOwnProducts = async (req, res) => {
     });
   }
 };
+
