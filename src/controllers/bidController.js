@@ -236,39 +236,97 @@ exports.deleteBid = async (req, res) => {
   }
 };
 
+// exports.getUserBidsOnOwnProducts = async (req, res) => {
+//   try {
+//     // Fetch bids on the logged-in user's products by other users
+//     // console.log(req.user);
+//     // console.log("keldi");
+
+//     const userBids = await prisma.bid.findMany({
+//       where: {
+//         product: {
+//           userId: req.user.id, // Ensure the product belongs to the logged-in user
+//         },
+//         userId: {
+//           not: req.user.id, // Ensure the bid was made by other users
+//         },
+//       },
+//       include: {
+//         product: true, // Include product details
+//         user: true, // Include the bidding user details
+//       },
+//     });
+//     // console.log(userBids);
+
+//     // If no bids found
+//     if (userBids.length === 0) {
+//       return res.status(404).json({
+//         message: "No bids found on your products from other users.",
+//       });
+//     }
+
+//     res.status(200).json(userBids);
+//   } catch (err) {
+//     res
+//       .status(500)
+//       .json({ message: "Failed to fetch user bids", error: err.message });
+//   }
+// };
 exports.getUserBidsOnOwnProducts = async (req, res) => {
   try {
-    // Fetch bids on the logged-in user's products by other users
-    // console.log(req.user);
-    // console.log("keldi");
-
-    const userBids = await prisma.bid.findMany({
+    // Fetch products owned by the logged-in user with associated bids from other users
+    const userProducts = await prisma.product.findMany({
       where: {
-        product: {
-          userId: req.user.id, // Ensure the product belongs to the logged-in user
-        },
-        userId: {
-          not: req.user.id, // Ensure the bid was made by other users
+        userId: req.user.id, // Products belonging to the logged-in user
+        bids: {
+          some: {
+            userId: { not: req.user.id }, // Bids placed by other users
+          },
         },
       },
       include: {
-        product: true, // Include product details
-        user: true, // Include the bidding user details
+        user: true, // The user who owns the product
+        sales: {
+          include: {
+            selledUser: true, // The user who sold the product
+            boughtedUser: true, // The user who bought the product
+          },
+        },
+        bids: {
+          include: {
+            user: true, // Include details of users who placed bids
+          },
+        },
       },
     });
-    // console.log(userBids);
 
-    // If no bids found
-    if (userBids.length === 0) {
+    // If no products with bids found
+    if (userProducts.length === 0) {
       return res.status(404).json({
         message: "No bids found on your products from other users.",
       });
     }
 
-    res.status(200).json(userBids);
+    // Format the response
+    const response = userProducts.map((product) => ({
+      productId: product.id,
+      selledUserId: product.sales[0]?.selledUserId,
+      boughtedUserId: product.sales[0]?.boughtedUserId,
+      selledCost: product.cost,
+      bids: product.bids.map((bid) => ({
+        bidId: bid.id,
+        userId: bid.userId,
+        bidAmount: bid.bidAmount,
+        createdAt: bid.createdAt,
+      })),
+    }));
+
+    res.status(200).json(response);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Failed to fetch user bids", error: err.message });
+    console.error(err);
+    res.status(500).json({
+      message: "Failed to fetch user bids",
+      error: err.message,
+    });
   }
 };
